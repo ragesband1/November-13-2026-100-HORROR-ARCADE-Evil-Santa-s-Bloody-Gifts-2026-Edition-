@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100 HORROR ARCADE: Evil Santa's Bloody Gifts (2026 Edition)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Share+Tech+Mono&family=Rubik+Glitch&display=swap');
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: #030305;
+            color: #f1f5f9;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .font-creep {
+            font-family: 'Creepster', cursive;
+        }
+
+        .font-glitch {
+            font-family: 'Rubik Glitch', cursive;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #991b1b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #dc2626;
+        }
+
+        /* Scary Tremble & Hover Effects for Every Interactive Element */
+        .scary-card {
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(15, 10, 18, 0.85);
+            border: 1px solid rgba(153, 27, 27, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scary-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.25), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .scary-card:hover::before {
+            left: 100%;
+        }
+
+        .scary-card:hover, button:hover, .hover-scream:hover {
+            transform: scale(1.05) translateY(-3px);
+            border-color: #ef4444;
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.7), inset 0 0 10px rgba(185, 28, 28, 0.4);
+            animation: scaryTremble 0.2s infinite alternate;
+        }
+
+        @keyframes scaryTremble {
+            0% { transform: scale(1.05) translate(0px, -2px) rotate(0deg); }
+            50% { transform: scale(1.05) translate(-1.5px, -3px) rotate(-0.5deg); }
+            100% { transform: scale(1.05) translate(1.5px, -1px) rotate(0.5deg); }
+        }
+
+        .blood-vignette {
+            pointer-events: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            box-shadow: inset 0 0 120px rgba(185, 28, 28, 0.5);
+            z-index: 40;
+            opacity: 0.8;
+        }
+
+        /* Scanline Overlay */
+        .scanlines::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
+            background-size: 100% 4px;
+            z-index: 45;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .blood-drip {
+            background: linear-gradient(180deg, #991b1b 0%, #450a0a 100%);
+        }
+    </style>
+</head>
+<body class="scanlines min-h-screen flex flex-col">
+
+    <!-- Blood Overlay Ambient Effect -->
+    <div class="blood-vignette"></div>
+
+    <!-- HEADER / HERO PORTAL BANNER -->
+    <header class="relative z-10 bg-slate-950/90 border-b-2 border-red-900/80 px-4 py-6 shadow-2xl backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+            
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-red-950 border-2 border-red-600 flex items-center justify-center text-red-500 text-3xl shadow-[0_0_20px_rgba(220,38,38,0.5)] animate-pulse">
+                    <i class="fa-solid fa-santa-hat font-bold"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-4xl font-creep tracking-wider text-red-600 drop-shadow-[0_2px_10px_rgba(220,38,38,0.8)]">
+                        100 HORROR ARCADE
+                    </h1>
+                    <p class="text-xs md:text-sm text-red-400 font-bold uppercase tracking-widest mt-0.5">
+                        Evil Santa's Bloody Gifts • Y8 / Friv / Boxhead Edition (2026)
+                    </p>
+                </div>
+            </div>
+
+            <!-- Global Controls & Audio Engine Status -->
+            <div class="flex items-center gap-3 flex-wrap justify-center">
+                <button id="btn-audio-toggle" onclick="toggleAudio()" class="hover-scream bg-slate-900 border border-red-800 text-red-400 hover:text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-volume-high text-sm"></i>
+                    <span id="audio-status-text">TUNOG: NAKABUKAS</span>
+                </button>
+                <button onclick="quickRandomGame()" class="hover-scream bg-gradient-to-r from-red-900 to-red-700 text-white border border-red-500 px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-dice text-base"></i>
+                    <span>RANDOM LARO</span>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- SEARCH & CATEGORY FILTER TABS -->
+    <nav class="relative z-10 max-w-7xl mx-auto px-4 py-6 w-full">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/80 p-3 rounded-2xl border border-red-900/40">
+            
+            <!-- Category Tabs -->
+            <div class="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
+                <button onclick="filterCategory('all')" class="cat-btn active hover-scream bg-red-900/80 text-white border border-red-600 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+                    Lahat (100 Games)
+                </button>
+                <button onclick="filterCategory('santa')" class="cat-btn hover-scream bg-slate-950 text-slate-300 border border-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+                    🎅 Evil Santa Collection
+                </button>
+                <button onclick="filterCategory('boxhead')" class="cat-btn hover-scream bg-slate-950 text-slate-300 border border-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+                    📦 Boxhead Shooters
+                </button>
+                <button onclick="filterCategory('survival')" class="cat-btn hover-scream bg-slate-950 text-slate-300 border border-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+                    🩸 Survival Horror
+                </button>
+                <button onclick="filterCategory('friv')" class="cat-btn hover-scream bg-slate-950 text-slate-300 border border-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+                    😱 Friv Nightmares
+                </button>
+            </div>
+
+            <!-- Search input -->
+            <div class="relative w-full md:w-64">
+                <input type="text" id="search-input" oninput="handleSearch()" placeholder="Maghanap ng laro (1-100)..." class="w-full bg-black/80 border border-red-900/60 rounded-xl px-3.5 py-1.5 text-xs text-red-200 placeholder-slate-500 focus:outline-none focus:border-red-500">
+                <i class="fa-solid fa-magnifying-glass absolute right-3 top-2.5 text-slate-500 text-xs"></i>
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- MAIN PORTAL: 100 GAMES SELECTION GRID -->
+    <main id="portal-view" class="relative z-10 max-w-7xl mx-auto px-4 pb-16 flex-1 w-full">
+        <div class="mb-4 flex items-center justify-between text-xs text-slate-400 px-1">
+            <span>MGA LARO (GAMES FOUND): <b id="game-count" class="text-red-500 font-bold">100 / 100</b></span>
+            <span class="text-slate-500"><i class="fa-solid fa-mouse"></i> I-hover para sa scary audio & tremble!</span>
+        </div>
+
+        <div id="games-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10 gap-3">
+            <!-- 100 Game Cards will be generated programmatically here -->
+        </div>
+    </main>
+
+    <!-- 3D CANVA ACTION GAME CONTAINER (HIDDEN UNTIL GAME START) -->
+    <div id="game-modal" class="fixed inset-0 z-50 bg-black/95 flex flex-col hidden">
+        <!-- Game Header Top Bar -->
+        <div class="bg-slate-950 border-b border-red-900 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span id="active-game-num" class="bg-red-900 text-white font-extrabold px-2.5 py-1 rounded text-xs">GAME #1</span>
+                <div>
+                    <h2 id="active-game-title" class="font-creep text-xl text-red-500 tracking-wider">Evil Santa's Chimney Trap</h2>
+                    <p id="active-game-sub" class="text-[10px] text-slate-400">Boxhead x Resident Evil 2026 Engine</p>
+                </div>
+            </div>
+
+            <!-- HUD Overlay Stats inside Canvas -->
+            <div class="flex items-center gap-4 text-xs font-bold">
+                <div class="text-emerald-400 flex items-center gap-1.5 bg-slate-900/80 px-3 py-1 rounded-lg border border-slate-800">
+                    <i class="fa-solid fa-heart pulse"></i> HP: <span id="game-hp">100</span>
+                </div>
+                <div class="text-amber-400 flex items-center gap-1.5 bg-slate-900/80 px-3 py-1 rounded-lg border border-slate-800">
+                    <i class="fa-solid fa-gift"></i> REGALO: <span id="game-gifts">0 / 5</span>
+                </div>
+                <button onclick="closeGameModal()" class="hover-scream bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1">
+                    <i class="fa-solid fa-xmark text-sm"></i> LABAS (EXIT)
+                </button>
+            </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="relative flex-1 w-full bg-black overflow-hidden flex items-center justify-center">
+            <div id="canvas-wrapper" class="w-full h-full"></div>
+
+            <!-- On-Screen Instructions -->
+            <div class="absolute bottom-4 left-4 bg-slate-900/90 border border-red-900/60 p-3 rounded-xl text-[11px] text-slate-300 pointer-events-none hidden sm:block">
+                <div class="font-bold text-red-500 mb-1">🎮 MGA KONTROL:</div>
+                <div><b>WASD / Arrows:</b> Maglakad</div>
+                <div><b>Left Click / Space:</b> Baril / Atake</div>
+                <div><b>E:</b> Buksan ang Regalo ni Evil Santa</div>
+            </div>
+
+            <!-- Game Over / Victory Modal -->
+            <div id="game-over-overlay" class="absolute inset-0 bg-black/90 z-20 flex flex-col items-center justify-center p-6 text-center hidden">
+                <h1 id="go-title" class="font-creep text-5xl text-red-600 mb-2">NABIKTIMA KA NI SANTA!</h1>
+                <p id="go-desc" class="text-slate-300 text-sm max-w-md mb-6">Ang iniregalo sa iyo ni Resident Evil Santa ay may palamuting bomba at halimaw...</p>
+                <button onclick="restartActiveGame()" class="hover-scream bg-red-700 hover:bg-red-600 text-white font-bold px-6 py-3 rounded-xl text-sm uppercase tracking-wider">
+                    SUBUKAN ULIT (RESTART)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="relative z-10 bg-slate-950 border-t border-red-950 py-4 px-4 text-center text-xs text-slate-600">
+        100 Horror Arcade 2026 • Evil Santa Edition • Inspired by Y8, Friv, and Boxhead gameplay styles.
+    </footer>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        // --- AUDIO SYNTHESIZER ENGINE (Web Audio API) ---
+        class HorrorSoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            initCtx() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playHoverScream() {
+                if (!this.enabled) return;
+                this.initCtx();
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.12);
+                
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            }
+
+            playJingleBellScare() {
+                if (!this.enabled) return;
+                this.initCtx();
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.25);
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+
+            playGunshot() {
+                if (!this.enabled) return;
+                this.initCtx();
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(20, this.ctx.currentTime + 0.15);
+
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            playSantaLaugh() {
+                if (!this.enabled) return;
+                this.initCtx();
+
+                const now = this.ctx.currentTime;
+                [110, 95, 80].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.15 + 0.12);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.15);
+                    osc.stop(now + idx * 0.15 + 0.12);
+                });
+            }
+        }
+
+        const snd = new HorrorSoundEngine();
+
+        function toggleAudio() {
+            snd.enabled = !snd.enabled;
+            const txt = document.getElementById('audio-status-text');
+            txt.innerText = snd.enabled ? "TUNOG: NAKABUKAS" : "TUNOG: NAKAPATAY";
+        }
+
+        // --- 100 GAME DATABASE GENERATOR ---
+        const GAME_CATEGORIES = ['santa', 'boxhead', 'survival', 'friv'];
+        const SANTA_TITLES = [
+            "Evil Santa's Chimney Trap", "Bloody Gift Unwrap", "Silent Night Slash",
+            "Raccoon City Santa Mutants", "Slay Bell Massacre", "Evil Santa's Workshop",
+            "Naughty List Executioner", "Terror in Toy Factory", "Resident Santa 2026",
+            "Frozen Blood Chimney", "Trapped Under Mistletoe", "Santa's Chainsaw Delivery"
+        ];
+        const BOXHEAD_TITLES = [
+            "Boxhead Zombie Apocalypse", "Boxhead Santa's Revenge", "Boxhead 2026 Nightmare",
+            "Boxhead Room of Doom", "Boxhead Flesh Eaters", "Boxhead Bloodbath Village",
+            "Boxhead Shotgun Defense", "Boxhead Endless Massacre", "Boxhead Mutant Claus"
+        ];
+        const SURVIVAL_TITLES = [
+            "Raccoon Hospital Escape", "Dark Village Stalker", "Biohazard Snowstorm",
+            "Amalgam Mutant Survival", "Flesh & Steel Bunker", "Shadows of Crystal Lake"
+        ];
+        const FRIV_TITLES = [
+            "Friv Scary Chimney Jump", "Friv Horror Puzzle #", "Friv Blood Maze",
+            "Friv Terror Room", "Friv Evil Toys Escape", "Friv Haunted Cabin"
+        ];
+
+        const gamesDatabase = [];
+
+        function generate100Games() {
+            for (let i = 1; i <= 100; i++) {
+                let category, title, icon;
+
+                if (i <= 35) {
+                    category = 'santa';
+                    title = `Game #${i}: ${SANTA_TITLES[(i - 1) % SANTA_TITLES.length]}`;
+                    icon = 'fa-santa-hat';
+                } else if (i <= 65) {
+                    category = 'boxhead';
+                    title = `Game #${i}: ${BOXHEAD_TITLES[(i - 36) % BOXHEAD_TITLES.length]}`;
+                    icon = 'fa-cube';
+                } else if (i <= 85) {
+                    category = 'survival';
+                    title = `Game #${i}: ${SURVIVAL_TITLES[(i - 66) % SURVIVAL_TITLES.length]}`;
+                    icon = 'fa-biohazard';
+                } else {
+                    category = 'friv';
+                    title = `Game #${i}: ${FRIV_TITLES[(i - 86) % FRIV_TITLES.length]}`;
+                    icon = 'fa-skull';
+                }
+
+                gamesDatabase.push({
+                    id: i,
+                    title: title,
+                    category: category,
+                    icon: icon,
+                    plays: Math.floor(Math.random() * 8000) + 1200
+                });
+            }
+        }
+
+        // Render Cards to Grid
+        function renderGamesGrid(filteredList) {
+            const grid = document.getElementById('games-grid');
+            grid.innerHTML = '';
+
+            filteredList.forEach(game => {
+                const card = document.createElement('div');
+                card.className = "scary-card p-3 rounded-xl flex flex-col items-center justify-between cursor-pointer group text-center aspect-square";
+                card.onclick = () => launchGame(game);
+                card.onmouseenter = () => snd.playHoverScream();
+
+                card.innerHTML = `
+                    <div class="w-full flex justify-between items-center text-[10px] text-red-500 font-bold mb-1">
+                        <span>#${game.id}</span>
+                        <span class="text-slate-500"><i class="fa-solid fa-fire text-amber-500"></i> ${(game.plays / 1000).toFixed(1)}k</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-red-950/80 border border-red-800/60 flex items-center justify-center text-red-500 text-xl group-hover:scale-110 group-hover:text-red-400 transition-all shadow-[0_0_10px_rgba(220,38,38,0.3)]">
+                        <i class="fa-solid ${game.icon}"></i>
+                    </div>
+                    <div class="w-full mt-2">
+                        <div class="text-[11px] font-bold text-slate-200 line-clamp-2 leading-tight group-hover:text-red-400">
+                            ${game.title.replace(`Game #${game.id}: `, '')}
+                        </div>
+                        <div class="text-[9px] text-red-500/80 uppercase font-semibold mt-1">
+                            ${game.category}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            document.getElementById('game-count').innerText = `${filteredList.length} / 100`;
+        }
+
+        // Filter Logic
+        let currentCategory = 'all';
+
+        function filterCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-red-900/80', 'text-white', 'border-red-600');
+                btn.classList.add('bg-slate-950', 'text-slate-300', 'border-slate-800');
+            });
+            event.currentTarget.classList.remove('bg-slate-950', 'text-slate-300', 'border-slate-800');
+            event.currentTarget.classList.add('bg-red-900/80', 'text-white', 'border-red-600');
+
+            applyFilters();
+        }
+
+        function handleSearch() {
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const searchVal = document.getElementById('search-input').value.toLowerCase();
+            const filtered = gamesDatabase.filter(g => {
+                const matchCat = currentCategory === 'all' || g.category === currentCategory;
+                const matchSearch = g.title.toLowerCase().includes(searchVal) || g.id.toString() === searchVal;
+                return matchCat && matchSearch;
+            });
+            renderGamesGrid(filtered);
+        }
+
+        function quickRandomGame() {
+            snd.playJingleBellScare();
+            const randGame = gamesDatabase[Math.floor(Math.random() * gamesDatabase.length)];
+            launchGame(randGame);
+        }
+
+        // --- PLAYABLE 3D ACTION GAME ENGINE (THREE.JS) ---
+        let scene, camera, renderer;
+        let player, evilSanta, gifts = [], zombies = [];
+        let keys = {};
+        let gameState = {
+            active: false,
+            hp: 100,
+            giftsCollected: 0,
+            targetGifts: 5,
+            activeGameObj: null
+        };
+
+        function launchGame(game) {
+            snd.playSantaLaugh();
+            gameState.activeGameObj = game;
+            gameState.hp = 100;
+            gameState.giftsCollected = 0;
+
+            document.getElementById('active-game-num').innerText = `GAME #${game.id}`;
+            document.getElementById('active-game-title').innerText = game.title;
+            document.getElementById('game-hp').innerText = '100';
+            document.getElementById('game-gifts').innerText = '0 / 5';
+            document.getElementById('game-over-overlay').classList.add('hidden');
+
+            document.getElementById('game-modal').classList.remove('hidden');
+
+            init3DGame();
+        }
+
+        function closeGameModal() {
+            gameState.active = false;
+            document.getElementById('game-modal').classList.add('hidden');
+        }
+
+        function init3DGame() {
+            const wrapper = document.getElementById('canvas-wrapper');
+            wrapper.innerHTML = '';
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050308);
+            scene.fog = new THREE.FogExp2(0x180505, 0.04);
+
+            camera = new THREE.PerspectiveCamera(60, wrapper.clientWidth / wrapper.clientHeight, 0.1, 1000);
+            camera.position.set(0, 18, 16);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(wrapper.clientWidth, wrapper.clientHeight);
+            renderer.shadowMap.enabled = true;
+            wrapper.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambLight = new THREE.AmbientLight(0xffffff, 0.2);
+            scene.add(ambLight);
+
+            const redLight = new THREE.PointLight(0xef4444, 2, 30);
+            redLight.position.set(0, 10, 0);
+            scene.add(redLight);
+
+            // Snowy Dark Ground
+            const groundGeo = new THREE.PlaneGeometry(80, 80);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Create Hero / Player
+            player = new THREE.Mesh(
+                new THREE.BoxGeometry(1, 1.8, 1),
+                new THREE.MeshStandardMaterial({ color: 0x3b82f6 })
+            );
+            player.position.set(0, 0.9, 0);
+            scene.add(player);
+
+            // Create EVIL SANTA (Resident Evil Style Mutated Boss)
+            evilSanta = new THREE.Group();
+
+            const santaBody = new THREE.Mesh(
+                new THREE.BoxGeometry(1.8, 2.8, 1.8),
+                new THREE.MeshStandardMaterial({ color: 0x991b1b }) // Bloody Red Coat
+            );
+            santaBody.position.y = 1.4;
+            evilSanta.add(santaBody);
+
+            // Creepy Santa Head
+            const santaHead = new THREE.Mesh(
+                new THREE.SphereGeometry(0.7, 8, 8),
+                new THREE.MeshStandardMaterial({ color: 0xfca5a5 })
+            );
+            santaHead.position.y = 3.2;
+            evilSanta.add(santaHead);
+
+            // Horns / Mutated Antlers
+            const horn = new THREE.Mesh(
+                new THREE.ConeGeometry(0.2, 1.2, 4),
+                new THREE.MeshStandardMaterial({ color: 0x000000 })
+            );
+            horn.position.set(0.4, 4, 0);
+            evilSanta.add(horn);
+
+            evilSanta.position.set(15, 0, -15);
+            scene.add(evilSanta);
+
+            // Spawn Bloody Gift Boxes around map
+            gifts = [];
+            for (let i = 0; i < 5; i++) {
+                const gift = new THREE.Mesh(
+                    new THREE.BoxGeometry(1, 1, 1),
+                    new THREE.MeshStandardMaterial({ color: 0xdc2626, emissive: 0x7f1d1d })
+                );
+                gift.position.set((Math.random() - 0.5) * 50, 0.5, (Math.random() - 0.5) * 50);
+                scene.add(gift);
+                gifts.push(gift);
+            }
+
+            gameState.active = true;
+            animate3DGame();
+        }
+
+        // Game Loop
+        function animate3DGame() {
+            if (!gameState.active) return;
+            requestAnimationFrame(animate3DGame);
+
+            // Player Controls
+            const speed = 0.25;
+            if (keys['KeyW'] || keys['ArrowUp']) player.position.z -= speed;
+            if (keys['KeyS'] || keys['ArrowDown']) player.position.z += speed;
+            if (keys['KeyA'] || keys['ArrowLeft']) player.position.x -= speed;
+            if (keys['KeyD'] || keys['ArrowRight']) player.position.x += speed;
+
+            // Camera follow player
+            camera.position.x = player.position.x;
+            camera.position.z = player.position.z + 16;
+
+            // Evil Santa AI Stalker Movement
+            const dir = new THREE.Vector3().subVectors(player.position, evilSanta.position).normalize();
+            evilSanta.position.x += dir.x * 0.08;
+            evilSanta.position.z += dir.z * 0.08;
+
+            // Collision with Evil Santa
+            if (player.position.distanceTo(evilSanta.position) < 2) {
+                damagePlayer(15);
+            }
+
+            // Check Gifts Collection (Press E or approach)
+            gifts.forEach((gift, idx) => {
+                if (gift.visible && player.position.distanceTo(gift.position) < 1.8) {
+                    gift.visible = false;
+                    gameState.giftsCollected++;
+                    snd.playJingleBellScare();
+                    document.getElementById('game-gifts').innerText = `${gameState.giftsCollected} / ${gameState.targetGifts}`;
+
+                    if (gameState.giftsCollected >= gameState.targetGifts) {
+                        triggerGameOver(true);
+                    }
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        function damagePlayer(amount) {
+            gameState.hp -= amount;
+            if (gameState.hp < 0) gameState.hp = 0;
+            document.getElementById('game-hp').innerText = Math.ceil(gameState.hp);
+
+            snd.playGunshot();
+
+            if (gameState.hp <= 0) {
+                triggerGameOver(false);
+            }
+        }
+
+        function triggerGameOver(victory) {
+            gameState.active = false;
+            const overlay = document.getElementById('game-over-overlay');
+            const title = document.getElementById('go-title');
+            const desc = document.getElementById('go-desc');
+
+            if (victory) {
+                title.innerText = "NAGUMPISA ANG PAGTAKAS! 🎉";
+                title.className = "font-creep text-5xl text-emerald-500 mb-2";
+                desc.innerText = "Nakuha mo ang lahat ng tunay na regalo at natakasan si Resident Evil Santa!";
+            } else {
+                title.innerText = "NABIKTIMA KA NI SANTA! 🩸";
+                title.className = "font-creep text-5xl text-red-600 mb-2";
+                desc.innerText = "Pinaligiran ka ng mga bomba't mutated toys sa loob ng regalo...";
+            }
+
+            overlay.classList.remove('hidden');
+        }
+
+        function restartActiveGame() {
+            if (gameState.activeGameObj) {
+                launchGame(gameState.activeGameObj);
+            }
+        }
+
+        // Key Listeners
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (e.code === 'Space' && gameState.active) {
+                snd.playGunshot();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // Init App
+        window.onload = function() {
+            generate100Games();
+            renderGamesGrid(gamesDatabase);
+        };
+    </script>
+</body>
+</html>
